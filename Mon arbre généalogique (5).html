@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mon arbre généalogique</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef2ef;--panel:#fff;--ink:#1d2a29;--mute:#5d6e6c;--line:#8fa8a4;--acc:#2a6b8a;--accbg:#d9e8ee;--bd:#cfdad7;--on:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#121a19;--panel:#1b2625;--ink:#e6efed;--mute:#9bb0ad;--line:#58736f;--acc:#7cc0de;--accbg:#233a43;--bd:#2e3f3d;--on:#0d1a1e;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#121a19;--panel:#1b2625;--ink:#e6efed;--mute:#9bb0ad;--line:#58736f;--acc:#7cc0de;--accbg:#233a43;--bd:#2e3f3d;--on:#0d1a1e;color-scheme:dark}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif}
+h1,h2{font-family:"Young Serif",Georgia,serif;font-weight:400;margin:0}
+header{padding:20px 24px 8px;display:flex;flex-wrap:wrap;gap:8px 20px;align-items:baseline;justify-content:space-between}
+h1{font-size:clamp(1.6rem,4vw,2.4rem)}
+header p{margin:0;color:var(--mute);max-width:46ch}
+main{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;padding:12px 24px 40px;align-items:start}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:12px 14px 40px}}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--bd);background:var(--panel);border-radius:8px;padding:7px 12px}
+button.pri{background:var(--acc);color:var(--on);border-color:var(--acc);font-weight:600}
+button.del{color:#b3261e}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.scroll{overflow-x:auto;padding-bottom:12px}
+#tree{position:relative;min-width:max-content;min-height:200px;margin:0 auto;width:max-content}
+#tree svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.gen{position:relative;display:grid;grid-template-columns:190px 1fr;gap:16px;align-items:start;margin-bottom:56px}
+.gh{background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:10px;position:sticky;left:0;z-index:2}
+.gh h2{font-size:1.05rem;margin-bottom:6px}
+.gh textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--bd);border-radius:6px;background:var(--bg);padding:6px;font-size:.85rem}
+.cards{display:grid;column-gap:26px;justify-content:start;min-height:90px}
+.card{width:168px;background:var(--panel);border:1px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer;position:relative;z-index:1;flex:none}
+.card.sel{border-color:var(--acc);box-shadow:0 0 0 3px var(--accbg)}
+.card b{display:block;line-height:1.25}
+.card small{color:var(--mute);display:block}
+.card .n{margin-top:6px;font-size:.8rem;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;border-top:1px dashed var(--bd);padding-top:5px}
+aside{background:var(--panel);border:1px solid var(--bd);border-radius:12px;padding:16px;position:sticky;top:12px}
+@media(max-width:900px){aside{position:static}}
+aside h2{font-size:1.15rem;margin-bottom:10px}
+label{display:block;font-size:.85rem;color:var(--mute);margin:10px 0 3px}
+input,select,textarea{width:100%;border:1px solid var(--bd);border-radius:8px;padding:7px 9px;background:var(--bg)}
+textarea{min-height:110px;resize:vertical}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+details{margin-top:16px;border-top:1px solid var(--bd);padding-top:10px}
+summary{cursor:pointer;color:var(--mute)}
+#io{min-height:90px;font:12px/1.3 ui-monospace,monospace}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:12px;padding:32px;text-align:center}
+.empty p{margin:0 0 14px;color:var(--mute)}
+.hint{color:var(--mute);font-size:.85rem;margin:0 0 10px}
+#tabs{display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:4px 24px}
+@media(max-width:900px){#tabs{padding:4px 14px}}
+#tabs input{border:0;background:transparent;font-weight:600;width:16ch;padding:7px 10px}
+#tabs .on{display:flex;align-items:center;background:var(--panel);border:2px solid var(--acc);border-radius:8px;overflow:hidden}
+#tabs .on button{border:0;border-left:1px solid var(--bd);border-radius:0}
+.top{display:flex;gap:8px;align-items:center}
+.av{flex:none;width:38px;height:38px;border-radius:50%;background:var(--accbg);color:var(--acc);display:grid;place-items:center;font-weight:600;overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+.lk{display:inline-block;margin-top:6px;font-size:.75rem;color:var(--acc);border:1px solid var(--bd);border-radius:20px;padding:1px 8px;cursor:pointer;background:var(--accbg)}
+.ph-prev{display:flex;gap:10px;align-items:center}
+.ph-prev .av{width:56px;height:56px}
+.ph-prev input{padding:4px}
+</style></head>
+<body>
+<header>
+  <h1>Mon arbre généalogique</h1>
+  <p>Ajoutez des personnes, reliez-les à leurs parents, puis commentez chaque personne et chaque génération.</p>
+</header>
+<nav id="tabs" aria-label="Arbres"></nav>
+<main>
+  <div class="scroll"><div id="tree"></div></div>
+  <aside id="panel" aria-live="polite"></aside>
+</main>
+<script>
+var S={people:[],gens:{},sel:null},KEY="arbre-genealogique-v2",DB={projects:[],cur:""},armedP=false;
+function pid(){return"t"+Math.random().toString(36).slice(2,7)}
+function curP(){return DB.projects.find(function(q){return q.id===DB.cur})}
+function setCur(id){var q=DB.projects.find(function(x){return x.id===id})||DB.projects[0];DB.cur=q.id;S.people=q.people;S.gens=q.gens;S.sel=null}
+function save(){var q=curP();if(q){q.people=S.people;q.gens=S.gens}try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}}
+function load(){
+  try{var d=JSON.parse(localStorage.getItem(KEY)||"null");
+    if(d&&d.projects&&d.projects.length)DB=d;
+    else{var o=JSON.parse(localStorage.getItem("arbre-genealogique-v1")||"null");DB={projects:[{id:pid(),name:"Mon arbre",people:o&&o.people||[],gens:o&&o.gens||{}}]}}
+  }catch(e){}
+  if(!DB.projects.length)DB.projects=[{id:pid(),name:"Mon arbre",people:[],gens:{}}];
+  setCur(DB.cur);
+}
+function ini(n){return String(n||"?").split(/\s+/).filter(Boolean).slice(0,2).map(function(w){return w[0].toUpperCase()}).join("")}
+function linkOf(p){if(!p.link)return null;var a=p.link.split("|"),q=DB.projects.find(function(x){return x.id===a[0]}),t=q&&q.people.find(function(x){return x.id===a[1]});return t?{q:q,t:t}:null}
+function backs(p){var r=[];DB.projects.forEach(function(q){q.people.forEach(function(x){if(x.link===DB.cur+"|"+p.id)r.push({q:q,x:x})})});return r}
+function links(p){var r=[],l=linkOf(p);if(l)r.push({go:p.link,label:l.q.name});backs(p).forEach(function(b){r.push({go:b.q.id+"|"+b.x.id,label:b.q.name})});return r}
+function lkOpts(p){return'<option value="">—</option>'+DB.projects.filter(function(q){return q.id!==DB.cur&&q.people.length}).map(function(q){return'<optgroup label="'+esc(q.name)+'">'+q.people.map(function(x){var v=q.id+"|"+x.id;return'<option value="'+v+'"'+(p.link===v?" selected":"")+'>'+esc(x.name)+'</option>'}).join("")+'</optgroup>'}).join("")}
+function goTo(v){var a=v.split("|");save();setCur(a[0]);S.sel=a[1];armed=false;armedP=false;refresh()}
+function refresh(){tabs();render();panel()}
+function tabs(){
+  var t=document.getElementById("tabs");
+  t.innerHTML=DB.projects.map(function(q){return q.id===DB.cur?'<span class="on"><input id="tn" value="'+esc(q.name)+'" aria-label="Nom de l’arbre">'+(DB.projects.length>1?'<button id="tdel" title="Supprimer cet arbre">'+(armedP?"Confirmer ?":"×")+'</button>':"")+'</span>':'<button data-t="'+q.id+'">'+esc(q.name)+'</button>'}).join("")+'<button class="pri" id="tadd">+ Nouvel arbre</button>';
+  document.getElementById("tn").oninput=function(){curP().name=this.value;save()};
+  t.querySelectorAll("[data-t]").forEach(function(b){b.onclick=function(){save();setCur(b.dataset.t);armed=false;armedP=false;refresh()}});
+  document.getElementById("tadd").onclick=function(){save();var q={id:pid(),name:"Arbre "+(DB.projects.length+1),people:[],gens:{}};DB.projects.push(q);setCur(q.id);armedP=false;armed=false;save();refresh()};
+  var d=document.getElementById("tdel");
+  if(d)d.onclick=function(){if(!armedP){armedP=true;tabs();return}armedP=false;DB.projects=DB.projects.filter(function(q){return q.id!==DB.cur});setCur(DB.projects[0].id);save();refresh()};
+}
+function uid(){return"p"+Math.random().toString(36).slice(2,8)}
+function get(id){return S.people.find(function(p){return p.id===id})}
+function esc(s){return String(s||"").replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function newP(o){var p={id:uid(),name:"Nouvelle personne",born:"",died:"",parents:[],spouse:"",note:""};for(var k in o)p[k]=o[k];S.people.push(p);return p}
+
+function computeGens(){
+  var g={};S.people.forEach(function(p){g[p.id]=0});
+  for(var i=0;i<14;i++)S.people.forEach(function(p){
+    var ps=p.parents.map(get).filter(Boolean);
+    if(ps.length)g[p.id]=Math.max(g[p.id],Math.max.apply(null,ps.map(function(x){return g[x.id]}))+1);
+    var sp=get(p.spouse);
+    if(sp){var m=Math.max(g[p.id],g[sp.id]);g[p.id]=g[sp.id]=m}
+  });
+  return g;
+}
+
+function render(){
+  var tree=document.getElementById("tree");
+  if(!S.people.length){
+    tree.innerHTML='<div class="empty"><p>Votre arbre est vide. Commencez par la personne la plus ancienne que vous connaissez.</p><button class="pri" id="e1">Ajouter la première personne</button> <button id="e2">Charger un exemple</button></div>';
+    document.getElementById("e1").onclick=function(){S.sel=newP({name:"Première personne"}).id;save();render();panel()};
+    document.getElementById("e2").onclick=example;return;
+  }
+  var g=computeGens(),rows={},max=0;
+  S.people.forEach(function(p){(rows[g[p.id]]=rows[g[p.id]]||[]).push(p);max=Math.max(max,g[p.id])});
+  var html="",order=S.people.slice().sort(function(a,b){return g[a.id]-g[b.id]}),occ={},ch=false,W=1;
+  S.g=g;
+  for(var n=0;n<=max;n++){
+    occ[n]={};var todo=[];
+    order.filter(function(p){return g[p.id]===n}).forEach(function(p){if(typeof p.x==="number"&&!occ[n][p.x])occ[n][p.x]=1;else{p.x=undefined;todo.push(p)}});
+    todo.forEach(function(p){
+      var v=p.parents.map(get).filter(function(q){return q&&typeof q.x==="number"}),s=get(p.spouse),d;
+      if(v.length)d=Math.round(v.reduce(function(a,q){return a+q.x},0)/v.length);
+      else if(s&&typeof s.x==="number"&&g[s.id]===n)d=s.x+1;
+      else d=Object.keys(occ[n]).reduce(function(a,k){return Math.max(a,+k+1)},0);
+      for(var o=0;;o++){var c=d+(o%2?(o+1)/2:-o/2);if(!occ[n][c]){p.x=c;occ[n][c]=1;ch=true;break}}
+    });
+  }
+  var mn=Math.min.apply(null,S.people.map(function(p){return p.x}));
+  S.people.forEach(function(p){W=Math.max(W,p.x-mn+1)});
+  if(ch)save();
+  for(var n=0;n<=max;n++){
+    var out=(rows[n]||[]).slice().sort(function(a,b){return a.x-b.x});
+    html+='<section class="gen"><div class="gh"><h2>Génération '+(n+1)+'</h2><textarea data-g="'+n+'" placeholder="Commentaire sur cette génération…" aria-label="Commentaire génération '+(n+1)+'">'+esc(S.gens[n])+'</textarea></div><div class="cards" style="grid-template-columns:repeat('+W+',168px)">'+
+    out.map(function(p){return'<div class="card'+(p.id===S.sel?" sel":"")+'" data-id="'+p.id+'" style="grid-column:'+(p.x-mn+1)+';grid-row:1" tabindex="0" role="button"><div class="top"><span class="av">'+(p.photo?'<img alt="" src="'+p.photo+'">':esc(ini(p.name)))+'</span><div><b>'+esc(p.name)+'</b><small>'+esc(p.born||"?")+(p.died?" – "+esc(p.died):"")+'</small></div></div>'+(p.note?'<div class="n">'+esc(p.note)+'</div>':"")+links(p).map(function(l){return'<span class="lk" data-go="'+esc(l.go)+'">🔗 '+esc(l.label)+'</span> '}).join("")+'</div>'}).join("")+'</div></section>';
+  }
+  tree.innerHTML='<svg id="lines"></svg>'+html;
+  tree.querySelectorAll(".card").forEach(function(c){
+    c.onclick=function(){S.sel=c.dataset.id;render();panel()};
+    c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();c.click()}};
+  });
+  tree.querySelectorAll("textarea[data-g]").forEach(function(t){t.oninput=function(){S.gens[t.dataset.g]=t.value;save()}});
+  tree.querySelectorAll(".lk").forEach(function(a){a.onclick=function(e){e.stopPropagation();goTo(a.dataset.go)}});
+  lines();
+}
+
+function lines(){
+  var tree=document.getElementById("tree"),svg=document.getElementById("lines");if(!svg)return;
+  var T=tree.getBoundingClientRect(),d="";
+  function box(id){var e=tree.querySelector('[data-id="'+id+'"]');if(!e)return null;var r=e.getBoundingClientRect();return{l:r.left-T.left,r:r.right-T.left,cx:r.left-T.left+r.width/2,t:r.top-T.top,b:r.bottom-T.top}}
+  var fam={};
+  S.people.forEach(function(p){
+    var c=box(p.id);if(!c)return;
+    var ps=p.parents.filter(function(i){return box(i)});
+    if(ps.length){var k=ps.slice().sort().join("+");(fam[k]=fam[k]||{ps:ps,kids:[]}).kids.push(p.id)}
+    var s=get(p.spouse);if(s&&p.id<s.id){var o=box(s.id);if(o&&Math.abs(o.t-c.t)<5&&Math.abs(Math.max(c.l,o.l)-Math.min(c.r,o.r))<40){var y=c.t+24,x1=Math.min(c.r,o.r),x2=Math.max(c.l,o.l);d+="M"+x1+" "+y+"H"+x2}}
+  });
+  Object.keys(fam).forEach(function(k){
+    var f=fam[k],P=f.ps.map(box),K=f.kids.map(box),ax,ay;
+    var ct=Math.min.apply(null,K.map(function(b){return b.t})),yb=ct-24;
+    var couple=P.length===2&&get(f.ps[0]).spouse===f.ps[1]&&Math.abs(P[0].t-P[1].t)<5&&Math.abs(Math.max(P[0].l,P[1].l)-Math.min(P[0].r,P[1].r))<40;
+    if(couple){
+      var L=P[0].l<P[1].l?P[0]:P[1],R=L===P[0]?P[1]:P[0];
+      ax=(L.r+R.l)/2;ay=L.t+24;
+    }else{
+      var pb=Math.max.apply(null,P.map(function(b){return b.b})),yp=pb+16;
+      P.forEach(function(b){d+="M"+b.cx+" "+b.b+"V"+yp});
+      var xs=P.map(function(b){return b.cx});
+      ax=xs.reduce(function(a,b){return a+b},0)/xs.length;ay=yp;
+      if(P.length>1)d+="M"+Math.min.apply(null,xs)+" "+yp+"H"+Math.max.apply(null,xs);
+    }
+    d+="M"+ax+" "+ay+"V"+yb;
+    var kx=K.map(function(b){return b.cx}).concat(ax);
+    d+="M"+Math.min.apply(null,kx)+" "+yb+"H"+Math.max.apply(null,kx);
+    K.forEach(function(b){d+="M"+b.cx+" "+yb+"V"+b.t});
+  });
+  svg.innerHTML='<path d="'+d+'" fill="none" stroke="var(--line)" stroke-width="2" stroke-linejoin="round"/>';
+}
+window.addEventListener("resize",lines);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(lines);
+
+var armed=false;
+function panel(){
+  var el=document.getElementById("panel"),p=get(S.sel),h="";
+  if(!p){
+    h='<h2>Personnes</h2><p class="hint">Cliquez sur une personne de l’arbre pour la modifier et lui ajouter un commentaire.</p><div class="btns"><button class="pri" id="add">Ajouter une personne</button></div>';
+  }else{
+    var opts=function(cur){return'<option value="">—</option>'+S.people.filter(function(x){return x.id!==p.id}).map(function(x){return'<option value="'+x.id+'"'+(x.id===cur?" selected":"")+'>'+esc(x.name)+'</option>'}).join("")};
+    h='<h2>Modifier la personne</h2>'+
+    '<label for="f-name">Nom</label><input id="f-name" value="'+esc(p.name)+'">'+
+    '<label for="f-photo">Photo</label><div class="ph-prev"><span class="av">'+(p.photo?'<img alt="" src="'+p.photo+'">':esc(ini(p.name)))+'</span><input type="file" id="f-photo" accept="image/*">'+(p.photo?'<button id="ph-del">Retirer</button>':"")+'</div>'+
+    '<div class="row"><div><label for="f-born">Naissance</label><input id="f-born" value="'+esc(p.born)+'" placeholder="1950"></div><div><label for="f-died">Décès</label><input id="f-died" value="'+esc(p.died)+'" placeholder="facultatif"></div></div>'+
+    '<label for="f-p0">Parent 1</label><select id="f-p0">'+opts(p.parents[0])+'</select>'+
+    '<label for="f-p1">Parent 2</label><select id="f-p1">'+opts(p.parents[1])+'</select>'+
+    '<label for="f-sp">Conjoint(e)</label><select id="f-sp">'+opts(p.spouse)+'</select>'+
+    '<label for="f-lk">Même personne dans un autre arbre</label><select id="f-lk">'+lkOpts(p)+'</select>'+
+    (backs(p).length?'<p class="hint">Aussi liée depuis : '+backs(p).map(function(b){return'<span class="lk" data-go="'+esc(b.q.id+"|"+b.x.id)+'">🔗 '+esc(b.q.name)+' — '+esc(b.x.name)+'</span> '}).join("")+'</p>':"")+
+    '<label for="f-note">Commentaire sur cette personne</label><textarea id="f-note" placeholder="Anecdotes, lieux, métier, souvenirs…">'+esc(p.note)+'</textarea>'+
+    '<div class="btns"><button id="mvl" title="Déplacer la case à gauche">◀ Gauche</button><button id="mvr" title="Déplacer la case à droite">Droite ▶</button></div><div class="btns"><button class="pri" id="child">Ajouter un enfant</button><button id="add">Ajouter une personne</button><button class="del" id="del">'+(armed?"Confirmer la suppression":"Supprimer")+'</button><button id="close">Fermer</button></div>';
+  }
+  h+='<details><summary>Sauvegarde et partage</summary><p class="hint">Copiez ce code pour sauvegarder tous vos arbres (photos et liens compris), ou collez un code puis chargez-le. Les arbres sont aussi enregistrés automatiquement dans ce navigateur.</p><textarea id="io" aria-label="Code de sauvegarde"></textarea><div class="btns"><button id="exp">Générer le code</button><button id="imp">Charger le code</button><button id="ex">Exemple</button></div></details>';
+  el.innerHTML=h;
+  var $=function(i){return document.getElementById(i)};
+  if($("add"))$("add").onclick=function(){S.sel=newP({}).id;armed=false;save();render();panel();$("f-name").select()};
+  if(p){
+    var live=function(k,id){$(id).oninput=function(){p[k]=this.value;save();render()}};
+    live("name","f-name");live("born","f-born");live("died","f-died");live("note","f-note");
+    var par=function(){p.parents=[$("f-p0").value,$("f-p1").value].filter(Boolean);save();render()};
+    $("f-p0").onchange=par;$("f-p1").onchange=par;
+    $("f-sp").onchange=function(){var o=get(p.spouse);if(o&&o.spouse===p.id)o.spouse="";p.spouse=this.value;var s=get(p.spouse);if(s)s.spouse=p.id;save();render()};
+    $("child").onclick=function(){var c=newP({name:"Nouvel enfant",parents:[p.id,p.spouse].filter(Boolean)});S.sel=c.id;save();render();panel();$("f-name").select()};
+    $("close").onclick=function(){S.sel=null;armed=false;render();panel()};
+    $("f-lk").onchange=function(){p.link=this.value;save();render();panel()};
+    document.querySelectorAll("#panel .lk").forEach(function(a){a.onclick=function(){goTo(a.dataset.go)}});
+    $("f-photo").onchange=function(){var f=this.files[0];if(!f)return;var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){var s=Math.min(im.width,im.height),c=document.createElement("canvas");c.width=c.height=200;c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,200,200);p.photo=c.toDataURL("image/jpeg",.8);save();render();panel()};im.src=r.result};r.readAsDataURL(f)};
+    if($("ph-del"))$("ph-del").onclick=function(){p.photo="";save();render();panel()};
+    var mv=function(dir){var n=S.g[p.id],q=S.people.find(function(x){return x!==p&&S.g[x.id]===n&&x.x===p.x+dir});if(q)q.x=p.x;p.x+=dir;save();render()};
+    $("mvl").onclick=function(){mv(-1)};$("mvr").onclick=function(){mv(1)};
+    $("del").onclick=function(){
+      if(!armed){armed=true;panel();return}
+      armed=false;S.people=S.people.filter(function(x){return x.id!==p.id});
+      S.people.forEach(function(x){x.parents=x.parents.filter(function(i){return i!==p.id});if(x.spouse===p.id)x.spouse=""});
+      S.sel=null;save();render();panel();
+    };
+  }
+  $("exp").onclick=function(){save();$("io").value=JSON.stringify(DB);$("io").select()};
+  $("imp").onclick=function(){try{var d=JSON.parse($("io").value);if(d.projects&&d.projects.length)DB=d;else if(d.people){var q=curP();q.people=d.people;q.gens=d.gens||{}}else throw 0;setCur(DB.cur);save();refresh()}catch(e){$("io").value="Code invalide : collez ici un code généré par « Générer le code »."}};
+  $("ex").onclick=example;
+}
+
+function example(){
+  S.people=[
+    {id:"a",name:"Marcel Dupont",born:"1925",died:"1998",parents:[],spouse:"b",note:"Menuisier à Beauvais. Il a construit la maison familiale de ses propres mains."},
+    {id:"b",name:"Odette Lambert",born:"1928",died:"2010",parents:[],spouse:"a",note:"Couturière, elle chantait toujours en cuisinant."},
+    {id:"c",name:"Jean Dupont",born:"1952",died:"",parents:["a","b"],spouse:"d",note:"Instituteur, passionné de généalogie."},
+    {id:"d",name:"Claire Martin",born:"1954",died:"",parents:[],spouse:"c",note:"Originaire de Lyon."},
+    {id:"e",name:"Hélène Dupont",born:"1956",died:"",parents:["a","b"],spouse:"",note:"A voyagé dans une vingtaine de pays."},
+    {id:"f",name:"Lucas Dupont",born:"1981",died:"",parents:["c","d"],spouse:"",note:"Ingénieur, installé à Lille."},
+    {id:"g",name:"Emma Dupont",born:"1985",died:"",parents:["c","d"],spouse:"",note:"Médecin. Aime la montagne."}];
+  S.gens={0:"Les racines de la famille, installées en Picardie après la guerre.",1:"La génération du baby-boom.",2:"Les premiers à avoir quitté la région."};
+  S.sel=null;save();render();panel();
+}
+load();refresh();
+</script>
+</body></html>
